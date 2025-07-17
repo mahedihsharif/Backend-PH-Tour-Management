@@ -31,4 +31,32 @@ const getAllUsers = catchAsync(
   }
 );
 
-export const UserControllers = { createUser, getAllUsers };
+const updateUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.params.id;
+    const token = req.headers.authorization;
+    // const verifiedToken = verifyToken(
+    //   token as string,
+    //   envVars.JWT_ACCESS_SECRET
+    // ) as JwtPayload;
+
+    const verifiedToken = req.user; //alternative way of verifyToken function using.
+
+    const payload = req.body;
+
+    const result = await UserServices.updateUser(
+      userId,
+      payload,
+      verifiedToken
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "User Updated Successfully!",
+      data: result,
+    });
+  }
+);
+
+export const UserControllers = { createUser, getAllUsers, updateUser };
