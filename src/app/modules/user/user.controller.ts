@@ -24,7 +24,7 @@ const getAllUsers = catchAsync(
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Users Retrieved Successfully!",
+      message: "All Users Retrieved Successfully!",
       data: result.data,
       meta: result.meta,
     });
@@ -35,10 +35,6 @@ const updateUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.params.id;
     const token = req.headers.authorization;
-    // const verifiedToken = verifyToken(
-    //   token as string,
-    //   envVars.JWT_ACCESS_SECRET
-    // ) as JwtPayload;
 
     const verifiedToken = req.user; //alternative way of verifyToken function using.
 

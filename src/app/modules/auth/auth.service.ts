@@ -1,8 +1,13 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
+import { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
-import { generateToken } from "../../utils/jwt";
+import {
+  createNewAccessTokenWithRefreshToken,
+  createUserTokens,
+} from "../../utils/userTokens";
 import { IUser } from "../user/user.interface";
 import { User } from "../user/user.model";
 
@@ -11,7 +16,7 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
 
   const isUserExist = await User.findOne({ email });
   if (!isUserExist) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Email doesn't exist!");
+    throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exist!");
   }
 
   const isPasswordMatched = await bcryptjs.compare(
@@ -23,22 +28,54 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect Password!");
   }
 
-  const jwtPayload = {
-    userId: isUserExist._id,
-    email: isUserExist.email,
-    role: isUserExist.role,
-  };
+  const userTokens = createUserTokens(isUserExist); //alternative way of accessToken and refreshToken function work...
 
-  const accessToken = generateToken(
-    jwtPayload,
-    envVars.JWT_ACCESS_SECRET,
-    envVars.JWT_ACCESS_EXPIRES
-  );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { password: pass, ...rest } = isUserExist.toObject();
 
   return {
-    email: isUserExist.email,
-    accessToken,
+    accessToken: userTokens.accessToken,
+    refreshToken: userTokens.refreshToken,
+    user: rest,
   };
 };
 
-export const AuthServices = { credentialsLogin };
+const resetPassword = async (
+  oldPassword: string,
+  newPassword: string,
+  decodedToken: JwtPayload
+) => {
+  const user = await User.findById(decodedToken.userId);
+
+  const isOldPasswordMatched = await bcryptjs.compare(
+    oldPassword,
+    user!.password as string
+  );
+
+  if (!isOldPasswordMatched) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Old Password doesn't matched!");
+  }
+
+  const newHashedPassword = await bcryptjs.hash(
+    newPassword,
+    Number(envVars.BCRYPT_SALT_ROUND)
+  );
+
+  user!.password = newHashedPassword;
+  user!.save();
+};
+
+const getNewAccessToken = async (refreshToken: string) => {
+  const newAccessToken = await createNewAccessTokenWithRefreshToken(
+    refreshToken
+  );
+
+  return {
+    accessToken: newAccessToken,
+  };
+};
+export const AuthServices = {
+  credentialsLogin,
+  getNewAccessToken,
+  resetPassword,
+};
