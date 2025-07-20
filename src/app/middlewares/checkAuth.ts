@@ -3,6 +3,8 @@ import httpStatus from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
 import { envVars } from "../config/env";
 import AppError from "../errorHelpers/AppError";
+import { IsActive } from "../modules/user/user.interface";
+import { User } from "../modules/user/user.model";
 import { verifyToken } from "../utils/jwt";
 
 export const checkAuth =
@@ -19,6 +21,25 @@ export const checkAuth =
         accessToken,
         envVars.JWT_ACCESS_SECRET
       ) as JwtPayload;
+
+      const isUserExist = await User.findOne({ email: verifiedToken.email });
+      if (!isUserExist) {
+        throw new AppError(httpStatus.BAD_REQUEST, "User doesn't exist!");
+      }
+
+      if (isUserExist) {
+        if (
+          isUserExist.isActive === IsActive.BLOCKED ||
+          isUserExist.isActive === IsActive.INACTIVE
+        )
+          throw new AppError(
+            httpStatus.BAD_REQUEST,
+            `User is ${isUserExist.isActive}`
+          );
+        if (isUserExist.isDeleted) {
+          throw new AppError(httpStatus.BAD_REQUEST, "User is Deleted!");
+        }
+      }
 
       if (!authRoles.includes(verifiedToken.role)) {
         throw new AppError(
