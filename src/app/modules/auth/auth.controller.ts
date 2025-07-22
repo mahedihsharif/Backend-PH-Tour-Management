@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import httpStatus from "http-status-codes";
 import { JwtPayload } from "jsonwebtoken";
+import passport from "passport";
 import { envVars } from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import catchAsync from "../../utils/catchAsync";
@@ -10,18 +11,47 @@ import { createUserTokens } from "../../utils/userTokens";
 import { AuthServices } from "./auth.service";
 
 const credentialsLogin = catchAsync(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async (req: Request, res: Response, next: NextFunction) => {
-    const loginInfo = await AuthServices.credentialsLogin(req.body);
+    //for custom login when using only express without passport.js.
+    // const loginInfo = await AuthServices.credentialsLogin(req.body);
 
-    setAuthCookie(res, loginInfo);
+    //custom login with passport.js
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    passport.authenticate("local", async (err: any, user: any, info: any) => {
+      if (err) {
+        // return next(error) //can use it
+        return next(new AppError(httpStatus.UNAUTHORIZED, err));
+      }
 
-    sendResponse(res, {
-      statusCode: httpStatus.OK,
-      success: true,
-      message: "User Logged In Successfully!",
-      data: loginInfo,
-    });
+      if (!user) {
+        return next(new AppError(httpStatus.UNAUTHORIZED, info.message));
+      }
+
+      const userTokens = createUserTokens(user);
+
+      setAuthCookie(res, userTokens);
+
+      sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "User Logged In Successfully!",
+        data: {
+          accessToken: userTokens.accessToken,
+          refreshToken: userTokens.refreshToken,
+          user: user,
+        },
+      });
+    })(req, res, next);
+
+    //for custom login with only express without passport custom login
+    // setAuthCookie(res, loginInfo);
+
+    //     sendResponse(res, {
+    //       statusCode: httpStatus.OK,
+    //       success: true,
+    //       message: "User Logged In Successfully!",
+    //       data: loginInfo,
+    //     });
   }
 );
 
