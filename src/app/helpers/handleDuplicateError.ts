@@ -3,10 +3,11 @@ import httpStatus from "http-status-codes";
 import { TGenericErrorResponse } from "../interface/error.types";
 
 const handleDuplicateError = (err: any): TGenericErrorResponse => {
-  const matchedArray = err.message.match(/"([^"]*)"/);
+  const matchedArray = err.message.match(/"([^"]*)"/)?.[1] || null;
+
   return {
     statusCode: httpStatus.BAD_REQUEST,
-    message: `${matchedArray[1]} already exist!`,
+    message: `${matchedArray} already exist!`,
   };
 };
 

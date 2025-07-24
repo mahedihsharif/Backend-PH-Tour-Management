@@ -119,4 +119,4 @@ const updateUser = async (
   return newUpdatedUser;
 };
 
-export const UserServices = { createUser, getAllUsers, updateUser };
+export const UserService = { createUser, getAllUsers, updateUser };
