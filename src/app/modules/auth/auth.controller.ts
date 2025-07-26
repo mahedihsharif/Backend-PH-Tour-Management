@@ -10,12 +10,25 @@ import { setAuthCookie } from "../../utils/setCookie";
 import { createUserTokens } from "../../utils/userTokens";
 import { AuthServices } from "./auth.service";
 
+//Custom login with only express.js
+// const credentialsLoginUsingExpressJs = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const loginInfo = await AuthServices.credentialsLogin(req.body);
+
+//     setAuthCookie(res, loginInfo);
+
+//     sendResponse(res, {
+//       statusCode: httpStatus.OK,
+//       success: true,
+//       message: "User Logged In Successfully!",
+//       data: loginInfo,
+//     });
+//   }
+// );
+
+//Custom login with Passport.js
 const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    //for custom login when using only express without passport.js.
-    // const loginInfo = await AuthServices.credentialsLogin(req.body);
-
-    //custom login with passport.js
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
@@ -42,16 +55,6 @@ const credentialsLogin = catchAsync(
         },
       });
     })(req, res, next);
-
-    //for custom login with only express without passport custom login
-    // setAuthCookie(res, loginInfo);
-
-    //     sendResponse(res, {
-    //       statusCode: httpStatus.OK,
-    //       success: true,
-    //       message: "User Logged In Successfully!",
-    //       data: loginInfo,
-    //     });
   }
 );
 

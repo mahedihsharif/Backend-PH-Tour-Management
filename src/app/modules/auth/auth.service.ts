@@ -28,7 +28,7 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect Password!");
   }
 
-  const userTokens = createUserTokens(isUserExist); //alternative way of accessToken and refreshToken function work...
+  const userTokens = createUserTokens(isUserExist);
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password: pass, ...rest } = isUserExist.toObject();
