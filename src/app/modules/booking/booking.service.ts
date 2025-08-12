@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from "http-status-codes";
 import AppError from "../../errorHelpers/AppError";
+import { getTransactionId } from "../../utils/getTransactionId";
 import { Payment } from "../payment/payment.model";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
 import { SSLService } from "../sslCommerz/sslCommerz.service";
@@ -8,10 +9,6 @@ import { Tour } from "../tour/tour.model";
 import { User } from "../user/user.model";
 import { IBooking } from "./booking.interface";
 import { Booking } from "./booking.model";
-
-const getTransactionId = () => {
-  return `tran-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-};
 
 /**
  * multiple data create or update mane jodi akta data ar creation or update onno akta data creation or update ar upor nirvor kore ai rokom khetre ar jonno amra sob somoy rollback use korbo jeno kono akta model ar data creation fail hole jeno onno akta model ar data o database e save na hoy
