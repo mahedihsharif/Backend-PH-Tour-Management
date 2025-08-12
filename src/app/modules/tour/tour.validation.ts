@@ -93,6 +93,7 @@ export const updateTourZodSchema = z.object({
   arrivalLocation: z
     .string({ invalid_type_error: "arrivalLocation must be string." })
     .optional(),
+  deleteImages: z.array(z.string()).optional(),
 });
 
 export const createTourTypeZodSchema = z.object({
