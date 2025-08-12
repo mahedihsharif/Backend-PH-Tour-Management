@@ -1,4 +1,5 @@
 import httpStatus from "http-status-codes";
+import { deleteImageFromCLoudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import { IDivision } from "./division.interface";
 import { Division } from "./division.model";
@@ -33,25 +34,40 @@ const getSingleDivision = async (slug: string) => {
 };
 
 const updateDivision = async (payload: Partial<IDivision>, id: string) => {
-  const existingDivision = await Division.findById(id);
-  if (!existingDivision) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Division not found");
+  const session = await Division.startSession();
+  session.startTransaction();
+  try {
+    const existingDivision = await Division.findById(id);
+    if (!existingDivision) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Division not found");
+    }
+
+    const duplicateDivision = await Division.findOne({
+      name: payload.name,
+      _id: { $ne: id },
+    });
+
+    if (duplicateDivision) {
+      throw new Error("A Division with this name already exists.");
+    }
+
+    const updatedDivision = await Division.findByIdAndUpdate(id, payload, {
+      new: true,
+      runValidators: true,
+      session: session,
+    });
+
+    if (payload.thumbnail && existingDivision.thumbnail) {
+      await deleteImageFromCLoudinary(existingDivision.thumbnail);
+    }
+    await session.commitTransaction();
+    session.endSession();
+    return updatedDivision;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-
-  const duplicateDivision = await Division.findOne({
-    name: payload.name,
-    _id: { $ne: id },
-  });
-
-  if (duplicateDivision) {
-    throw new Error("A Division with this name already exists.");
-  }
-
-  const updatedDivision = await Division.findByIdAndUpdate(id, payload, {
-    new: true,
-    runValidators: true,
-  });
-  return updatedDivision;
 };
 
 const deleteDivision = async (id: string) => {
