@@ -117,7 +117,7 @@ const resetPassword = catchAsync(
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
-      message: "Password Changed Successfully",
+      message: "Password Reset Successfully",
       data: null,
     });
   }
@@ -127,18 +127,20 @@ const changePassword = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const oldPassword = req.body.oldPassword;
     const newPassword = req.body.newPassword;
+    const confirmPassword = req.body.confirmPassword;
     const decodedToken = req.user;
 
     await AuthServices.changePassword(
       oldPassword,
       newPassword,
+      confirmPassword,
       decodedToken as JwtPayload
     );
 
     sendResponse(res, {
       statusCode: httpStatus.OK,
       success: true,
-      message: "Password Reset Successfully!",
+      message: "Password Changed Successfully!",
       data: null,
     });
   }
