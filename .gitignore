@@ -2,4 +2,4 @@
 .env
 /dist
 .vercel
-.env.dev
+.env.dev.env.dev
