@@ -3,6 +3,7 @@ import httpStatus from "http-status-codes";
 import { uploadBufferToCloudinary } from "../../config/cloudinary.config";
 import AppError from "../../errorHelpers/AppError";
 import { generatePdf, IInvoiceData } from "../../utils/invoice";
+import { sendEmail } from "../../utils/sendEmail";
 import { BOOKING_STATUS } from "../booking/booking.interface";
 import { Booking } from "../booking/booking.model";
 import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
@@ -98,6 +99,20 @@ const successPayment = async (query: Record<string, string>) => {
       { invoiceUrl: cloudinaryResult.secure_url },
       { runValidators: true, session: session }
     );
+
+    await sendEmail({
+      to: (updatedBooking.user as unknown as IUser).email,
+      subject: "Your Booking Invoice",
+      templateName: "invoice",
+      templateData: invoiceData,
+      attachments: [
+        {
+          filename: "invoice.pdf",
+          content: pdfBuffer,
+          contentType: "application/pdf",
+        },
+      ],
+    });
 
     await session.commitTransaction(); //transaction
     session.endSession();
