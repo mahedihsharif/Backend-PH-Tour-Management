@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import bcryptjs from "bcryptjs";
 import httpStatus from "http-status-codes";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 import { envVars } from "../../config/env";
 import AppError from "../../errorHelpers/AppError";
 import { sendEmail } from "../../utils/sendEmail";
@@ -105,8 +105,8 @@ const forgotPassword = async (email: string) => {
   };
 
   const resetToken = jwt.sign(jwtPayload, envVars.JWT_ACCESS_SECRET, {
-    expiresIn: "10m",
-  });
+    expiresIn: envVars.EMAIL_SENDER.SMTP_JWT_ACCESS_EXPIRES,
+  } as SignOptions);
 
   const resetUILink = `${envVars.FRONTEND_URL}/reset-password?id=${isUserExist._id}&token=${resetToken}`;
 
@@ -150,8 +150,16 @@ const resetPassword = async (
 const changePassword = async (
   oldPassword: string,
   newPassword: string,
+  confirmPassword: string,
   decodedToken: JwtPayload
 ) => {
+  const existPassword = oldPassword === newPassword;
+  if (existPassword) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Password is already Exist, please select new password for change"
+    );
+  }
   const user = await User.findById(decodedToken.userId);
 
   const isOldPasswordMatched = await bcryptjs.compare(
@@ -161,6 +169,14 @@ const changePassword = async (
 
   if (!isOldPasswordMatched) {
     throw new AppError(httpStatus.BAD_REQUEST, "Old Password doesn't matched!");
+  }
+
+  const savedPassword = newPassword === confirmPassword;
+  if (!savedPassword) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "New Password and Confirm Password doesn't matched"
+    );
   }
 
   const newHashedPassword = await bcryptjs.hash(

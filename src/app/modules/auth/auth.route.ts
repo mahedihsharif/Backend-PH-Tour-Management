@@ -2,8 +2,13 @@ import { NextFunction, Request, Response, Router } from "express";
 import passport from "passport";
 import { envVars } from "../../config/env";
 import { checkAuth } from "../../middlewares/checkAuth";
+import validateRequest from "../../middlewares/validateRequest";
 import { Role } from "../user/user.interface";
 import { AuthControllers } from "./auth.controller";
+import {
+  createForgetPasswordZodSchema,
+  createResetPasswordZodSchema,
+} from "./auth.validation";
 
 const router = Router();
 
@@ -19,10 +24,15 @@ router.post(
   checkAuth(...Object.values(Role)),
   AuthControllers.setPassword
 );
-router.post("/forgot-password", AuthControllers.forgotPassword);
+router.post(
+  "/forgot-password",
+  validateRequest(createForgetPasswordZodSchema),
+  AuthControllers.forgotPassword
+);
 router.post(
   "/reset-password",
   checkAuth(...Object.values(Role)),
+  validateRequest(createResetPasswordZodSchema),
   AuthControllers.resetPassword
 );
 
