@@ -77,12 +77,15 @@ const createTour = catchAsync(async (req: Request, res: Response) => {
 const getAllTours = catchAsync(async (req: Request, res: Response) => {
   const query = req.query;
   const result = await TourService.getAllTours(query as Record<string, string>);
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message: "All Tours retrieved successfully",
-    data: result.data,
-    meta: result.meta,
+    data: {
+      meta: result.meta,
+      data: result.data,
+    },
   });
 });
 

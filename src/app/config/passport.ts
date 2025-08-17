@@ -30,6 +30,18 @@ passport.use(
           } as ICustomVerifyOptions);
         }
 
+        const isPasswordMatched = await bcryptjs.compare(
+          password as string,
+          isUserExist.password as string
+        );
+
+        if (!isPasswordMatched) {
+          return done(null, false, {
+            message: "Incorrect Password!",
+            type: IAuthError.UNAUTHORIZED,
+          } as ICustomVerifyOptions);
+        }
+
         if (!isUserExist.isVerified) {
           return done(null, false, {
             message: "Account is not verified",
@@ -58,18 +70,6 @@ passport.use(
             message:
               "You have authenticated through Google. So if you want to login with credentials, then at first login with google and set a password for your Email and then you can login with email and password.",
           });
-        }
-
-        const isPasswordMatched = await bcryptjs.compare(
-          password as string,
-          isUserExist.password as string
-        );
-
-        if (!isPasswordMatched) {
-          return done(null, false, {
-            message: "Incorrect Password!",
-            type: IAuthError.INCORRECT_PASSWORD,
-          } as ICustomVerifyOptions);
         }
 
         return done(null, isUserExist);

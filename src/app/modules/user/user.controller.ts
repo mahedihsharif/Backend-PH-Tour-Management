@@ -30,8 +30,10 @@ const getAllUsers = catchAsync(
       statusCode: httpStatus.OK,
       success: true,
       message: "All Users Retrieved Successfully!",
-      data: result.data,
-      meta: result.meta,
+      data: {
+        meta: result.meta,
+        data: result.data,
+      },
     });
   }
 );

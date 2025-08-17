@@ -127,7 +127,6 @@ const createTour = async (payload: ITour) => {
 
 const getAllTours = async (query: Record<string, string>) => {
   const queryBuilder = new QueryBuilder(Tour.find(), query);
-
   const tours = await queryBuilder
     .filter()
     .search(tourSearchableFields)
@@ -141,8 +140,8 @@ const getAllTours = async (query: Record<string, string>) => {
   ]);
 
   return {
-    data: data,
-    meta: meta,
+    data,
+    meta,
   };
 };
 

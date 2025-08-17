@@ -31,6 +31,7 @@ const globalErrorHandler = async (
   let errorSources: TErrorSources[] = [];
   let statusCode = 500;
   let message = "Something went to wrong!!";
+  let type;
 
   // mongoose duplicate key error
   if (err.code === 11000) {
@@ -62,6 +63,7 @@ const globalErrorHandler = async (
   else if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
+    type = err.type || null;
   } else if (err instanceof Error) {
     statusCode = 500;
     message = err.message;
@@ -71,6 +73,7 @@ const globalErrorHandler = async (
     success: false,
     errorSources,
     message,
+    type,
     err: envVars.NODE_ENV === "development" ? err : null,
     stack: envVars.NODE_ENV === "development" ? err.stack : null,
   });
