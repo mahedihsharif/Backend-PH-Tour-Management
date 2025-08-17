@@ -35,11 +35,11 @@ const credentialsLogin = catchAsync(
     passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (!user) {
         if (info.type === IAuthError.NOT_FOUND) {
-          return next(new AppError(httpStatus.NOT_FOUND, info));
+          return next(new AppError(httpStatus.NOT_FOUND, info.message));
         } else if (info.type === IAuthError.NOT_VERIFIED) {
-          return next(new AppError(httpStatus.FORBIDDEN, info));
+          return next(new AppError(httpStatus.FORBIDDEN, info.message));
         } else if (info.type === IAuthError.INCORRECT_PASSWORD) {
-          return next(new AppError(httpStatus.UNAUTHORIZED, info));
+          return next(new AppError(httpStatus.UNAUTHORIZED, info.message));
         }
       }
 
