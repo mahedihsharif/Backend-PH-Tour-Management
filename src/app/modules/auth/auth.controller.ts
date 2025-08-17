@@ -9,6 +9,7 @@ import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResponse";
 import { setAuthCookie } from "../../utils/setCookie";
 import { createUserTokens } from "../../utils/userTokens";
+import { IAuthError } from "./auth.interface";
 import { AuthServices } from "./auth.service";
 
 //Custom login with only express.js
@@ -32,13 +33,14 @@ const credentialsLogin = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     passport.authenticate("local", async (err: any, user: any, info: any) => {
-      if (err) {
-        // return next(error) //can use it
-        return next(new AppError(httpStatus.UNAUTHORIZED, err));
-      }
-
       if (!user) {
-        return next(new AppError(httpStatus.UNAUTHORIZED, info.message));
+        if (info.type === IAuthError.NOT_FOUND) {
+          return next(new AppError(httpStatus.NOT_FOUND, info.message));
+        } else if (info.type === IAuthError.NOT_VERIFIED) {
+          return next(new AppError(httpStatus.FORBIDDEN, info.message));
+        } else if (info.type === IAuthError.INCORRECT_PASSWORD) {
+          return next(new AppError(httpStatus.UNAUTHORIZED, info.message));
+        }
       }
 
       const userTokens = createUserTokens(user);

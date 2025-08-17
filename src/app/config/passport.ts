@@ -6,10 +6,15 @@ import {
   Profile,
   VerifyCallback,
 } from "passport-google-oauth20";
-import { Strategy as LocalStrategy } from "passport-local";
+import { IVerifyOptions, Strategy as LocalStrategy } from "passport-local";
+import { IAuthError } from "../modules/auth/auth.interface";
 import { IsActive, Role } from "../modules/user/user.interface";
 import { User } from "../modules/user/user.model";
 import { envVars } from "./env";
+
+export interface ICustomVerifyOptions extends IVerifyOptions {
+  type?: string;
+}
 
 // credentials or local authentication
 passport.use(
@@ -19,21 +24,29 @@ passport.use(
       try {
         const isUserExist = await User.findOne({ email });
         if (!isUserExist) {
-          return done(null, false, { message: "User does not exist!" });
+          return done(null, false, {
+            message: "User does not exist!",
+            type: IAuthError.NOT_FOUND,
+          } as ICustomVerifyOptions);
         }
 
         if (!isUserExist.isVerified) {
-          return done("User is not verified");
+          return done(null, false, {
+            message: "Account is not verified",
+            type: IAuthError.NOT_VERIFIED,
+          } as ICustomVerifyOptions);
         }
 
         if (
           isUserExist.isActive === IsActive.BLOCKED ||
           isUserExist.isActive === IsActive.INACTIVE
         ) {
-          return done(`User is ${isUserExist.isActive}`);
+          return done(null, false, {
+            message: `User is ${isUserExist.isActive}`,
+          });
         }
         if (isUserExist.isDeleted) {
-          return done("User is deleted");
+          return done(null, false, { message: "User is deleted" });
         }
 
         const isGoogleAuthenticated = isUserExist.auths.some(
@@ -53,7 +66,10 @@ passport.use(
         );
 
         if (!isPasswordMatched) {
-          return done(null, false, { message: "Incorrect Password!" });
+          return done(null, false, {
+            message: "Incorrect Password!",
+            type: IAuthError.INCORRECT_PASSWORD,
+          } as ICustomVerifyOptions);
         }
 
         return done(null, isUserExist);
